@@ -9,12 +9,9 @@
 #include <S32K144.h>
 #include "bootload.h"
 #include "../sys/clocks.h"
-#include "../tty/uart.h"
 #include "../tty/tty.h"
 #include "../tty/rpc.h"
 #include "../fw/fw.h"
-
-#define UARTCFG UART_IFC2|UART_PIN_RX1|UART_PIN_TX1|UART_B921600
 
 int need_jump_to_fw = 0;
 
@@ -22,7 +19,7 @@ int _extra_proctree();
 int _extra_help();
 
 int
-bootloadmain ()
+bootloadmain (uint32_t uartcfg)
 {
   extra_proctree = _extra_proctree;
   extra_help     = _extra_help;
@@ -30,7 +27,7 @@ bootloadmain ()
   char buffer[MAX_CANON] = {0};
 
   init_CLKs ();
-  uart_init (UARTCFG);
+  uart_init (uartcfg);
   proctree_init();
 
   while (1)
@@ -38,10 +35,14 @@ bootloadmain ()
       if (need_jump_to_fw)
       	{
       	  uart_reset   ();
-      	  disable_CLKs ();
+#ifdef APPDEBUG                  /* If you debug application through */
+      	  disable_CLKs_dbg ();   /* openSDA,  FIRC have to work      */
+#else
+      	  disable_CLKs();
+#endif
           jump_to_fw   ();
           init_CLKs ();
-          uart_init (UARTCFG);
+          uart_init (uartcfg);
           need_jump_to_fw = 0;
       	}
 
@@ -68,9 +69,11 @@ _extra_proctree ()
 int
 _extra_help ()
 {
-  uart_puts ("\tupload\r\n\t\t- transmit fw to mcu\r\n",  MAX_CANON);
-  uart_puts ("\tjump APP_BEGIN_ADDRESS\r\n\t\t- jump to application\r\n", MAX_CANON);
-  uart_puts ("\r\n", MAX_CANON);
+  uart_puts ("\tupload\r\n",                  MAX_CANON);
+  uart_puts ("\t  /* transmit fw to mcu  */\r\n",  MAX_CANON);
+  uart_puts ("\tjump APP_BEGIN_ADDRESS\r\n",  MAX_CANON);
+  uart_puts ("\t  /* jump to application */\r\n", MAX_CANON);
+  uart_puts ("\r\n",                          MAX_CANON);
   return 0;
 }
 

@@ -174,8 +174,8 @@ uart_init (uint32_t settings)
 		     LPUART_BAUD_MAEN2(0)|
 		     LPUART_BAUD_MAEN1(0);
 
-  LPUART2->CTRL = LPUART_CTRL_RE(1)| /* RE=1: Receiver enabled    */
-                  LPUART_CTRL_TE(1); /* TE=1: Transmitter enabled */
+  LPUART_PTR->CTRL = LPUART_CTRL_RE(1)| /* RE=1: Receiver enabled    */
+                     LPUART_CTRL_TE(1); /* TE=1: Transmitter enabled */
 }
 
 void

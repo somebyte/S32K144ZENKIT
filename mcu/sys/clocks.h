@@ -24,7 +24,8 @@ void disable_SIRC (void);
 void disable_FIRC (void);
 void disable_SPLL (void);
 
-void init_CLKs    (void);
-void disable_CLKs (void);
+void init_CLKs        (void);
+void disable_CLKs     (void);
+void disable_CLKs_dbg (void);
 
 #endif /* CLOCKS_CLOCKS_H_ */

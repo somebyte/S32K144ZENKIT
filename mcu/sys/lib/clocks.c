@@ -198,7 +198,17 @@ void
 disable_CLKs (void)
 {
   disable_SPLL();
-  //disable_FIRC();
+  disable_FIRC();
+  disable_SIRC();
+  disable_SOSC();
+  SIM->LPOCLKS |= SIM_LPOCLKS_LPO32KCLKEN(0);
+}
+
+void
+disable_CLKs_dbg (void)
+{
+  disable_SPLL();
+//  disable_FIRC(); FIRC have to work during debug
   disable_SIRC();
   disable_SOSC();
   SIM->LPOCLKS |= SIM_LPOCLKS_LPO32KCLKEN(0);
