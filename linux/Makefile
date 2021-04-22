@@ -12,7 +12,7 @@ uploader: ttyspeed.o uploader.o
 clean:
 	rm -f *.o
 
-distclean:
+distclean: clean
 	rm -f ttydebug uploader
 
 .PHONY: all clean distclean
