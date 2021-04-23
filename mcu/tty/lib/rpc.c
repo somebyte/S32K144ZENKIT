@@ -38,6 +38,13 @@ proctree_init ()
   return proctree_ptr;
 }
 
+void
+proctree_reset ()
+{
+  delete_cmdtree (proctree_ptr);
+  proctree_ptr = NULL;
+}
+
 int
 callproc (const char* instruction)
 {

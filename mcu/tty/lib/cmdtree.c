@@ -84,7 +84,7 @@ insert_command (cmdtree_ptr_t tree, const char* cmdname, cmdfunc_ptr_t fptr)
 
   cmdnode_ptr_t *last = &tree->root;
   cmdnode_ptr_t  node =  tree->root;
-  size_t       size = strlen (cmdname) + 1;
+  size_t         size = strlen (cmdname) + 1;
 
   for(;;)
     {
@@ -102,6 +102,7 @@ insert_command (cmdtree_ptr_t tree, const char* cmdname, cmdfunc_ptr_t fptr)
               strcpy(node->name, cmdname);
             }
 
+          ++tree->count;
           *last = node;
           return node;
         }
@@ -123,6 +124,41 @@ insert_command (cmdtree_ptr_t tree, const char* cmdname, cmdfunc_ptr_t fptr)
           last = &node->left;
           node = node->left;
         }
+    }
+}
+
+void
+delete_cmdtree (cmdtree_ptr_t tree)
+{
+  if (tree == NULL)
+    return;
+
+  cmdnode_ptr_t  node = tree->root;
+  cmdnode_ptr_t *last = &tree->root;
+
+  while (node)
+    {
+      while (node->left)
+        {
+          last = &node->left;
+          node =  node->left;
+        }
+
+      while (node->right)
+        {
+          last = &node->right;
+          node = node->right;
+        }
+
+      if (node->left)
+        continue;
+
+      free ((*last)->name);
+      free (*last);
+      *last = NULL;
+      last = &tree->root;
+      node = tree->root;
+       --tree->count;
     }
 }
 

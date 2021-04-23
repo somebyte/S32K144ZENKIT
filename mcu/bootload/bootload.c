@@ -34,6 +34,7 @@ bootloadmain (uint32_t uartcfg)
     {
       if (need_jump_to_fw)
       	{
+	  proctree_reset();
       	  uart_reset   ();
 #ifdef APPDEBUG                  /* If you debug application through */
       	  disable_CLKs_dbg ();   /* openSDA,  FIRC have to work      */
@@ -43,6 +44,7 @@ bootloadmain (uint32_t uartcfg)
           jump_to_fw   ();
           init_CLKs ();
           uart_init (uartcfg);
+          proctree_init();
           need_jump_to_fw = 0;
       	}
 

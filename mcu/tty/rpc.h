@@ -15,8 +15,9 @@ typedef int (*extra_ptr_t)(void);
 /* ROOT of command tree */
 extern cmdtree_ptr_t proctree_ptr;
 
-cmdtree_ptr_t proctree_init ();
-int           callproc      (const char* instruction);
+cmdtree_ptr_t proctree_init  ();
+void          proctree_reset ();
+int           callproc       (const char* instruction);
 
 /* virtual methods */
 extern extra_ptr_t extra_proctree;

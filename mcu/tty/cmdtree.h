@@ -21,5 +21,6 @@ typedef int (*cmdfunc_ptr_t)(const void*);
 cmdtree_ptr_t create_cmdtree (void);
 cmdfunc_ptr_t search_command (cmdtree_ptr_t root, const char* cmdname);
 cmdnode_ptr_t insert_command (cmdtree_ptr_t root, const char* cmdname, cmdfunc_ptr_t fptr);
+void          delete_cmdtree (cmdtree_ptr_t root);
 
 #endif /* CMD_CMDTREE_H_ */
