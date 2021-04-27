@@ -1,0 +1,41 @@
+S32DS IDE
+
+---------------------------------------
+How to change a firmware begin address?
+---------------------------------------
+
+If  you use S32DS IDE, your project have directory Project_Settings/Linker_Files containing file – S32K1xx_flash.ld.
+You can change begin address of your firmware in it, as shown below.
+
+MEMORY
+{
+/* Flash */
+m_interrupts   (RX) : ORIGIN = 0x00000000, LENGTH = 0x00000400
+m_flash_config (RX) : ORIGIN = 0x00000400, LENGTH = 0x00000010
+m_text         (RX) : ORIGIN = 0x00000410, LENGTH = 0x0007FBF0
+...
+}
+
+For example, I set begin address as 0x0000B000
+
+MEMORY
+{
+/* Flash */
+m_interrupts   (RX) : ORIGIN = 0x0000B000, LENGTH = 0x00000400
+m_flash_config (RX) : ORIGIN = 0x0000B400, LENGTH = 0x00000010
+m_text         (RX) : ORIGIN = 0x0000B410, LENGTH = 0x0007FBF0
+...
+} 
+
+---------------------
+How to get srec file?
+---------------------
+
+Choose your project and press Alt+Enter
+Open “C/C++ Build”/”Settings”
+Choose “Cross Settings” and check “Create flash image”
+After that go to below on “Standard S32DS Create Flash Image”/”General”
+And last choose “Output file format(-O)”/“Motorola S-record” from list.
+OK.
+Now, you can build it and upload.
+

@@ -38,3 +38,5 @@ tty      - source code to make tty interface with RPC over UART
 docs
 ----
 How_to_test_S32K144ZENKIT.pdf
+How_to_get_firmware_for_loading.txt
+
