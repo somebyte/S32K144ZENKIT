@@ -5,7 +5,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include "ttyspeed.h"
-const char *usage = "\n\tttyuploader <tty port device> <baudrate> <srec>\n";
+const char *usage = "\n\tuploader <tty port device> <baudrate> <srec>\n";
 
 #define MAX_SREC 81
 #define ERR_OK  0x41
