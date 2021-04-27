@@ -138,7 +138,7 @@ enter_mode_NRUN (void) // 80MHz /* Change to normal RUN mode with 8MHz FIRC, 80M
 void
 disable_LPO (void)
 {
-  SIM->LPOCLKS |= SIM_LPOCLKS_LPO32KCLKEN(0);
+  SIM->LPOCLKS &= ~SIM_LPOCLKS_LPO32KCLKEN(1);
 }
 
 void
@@ -201,7 +201,7 @@ disable_CLKs (void)
   disable_FIRC();
   disable_SIRC();
   disable_SOSC();
-  SIM->LPOCLKS |= SIM_LPOCLKS_LPO32KCLKEN(0);
+  disable_LPO();
 }
 
 void
@@ -211,6 +211,6 @@ disable_CLKs_dbg (void)
 //  disable_FIRC(); FIRC have to work during debug
   disable_SIRC();
   disable_SOSC();
-  SIM->LPOCLKS |= SIM_LPOCLKS_LPO32KCLKEN(0);
+  disable_LPO();
 }
 
