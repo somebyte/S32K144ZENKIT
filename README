@@ -3,10 +3,10 @@ Useful code to work with MCU s32k144
 
 dirs
 ----
-docs/How_to_test_S32K144ZENKIT.pdf
-evb   - contains examples of srec files for testing
-linux - contains source code of linux programs for exchanging between linux and mcu
-mcu   - contains source code to make S32K144 firmwares
+docs  - various documents to explain what is happening and what need doing :-)
+evb   - examples of srec files for testing
+linux - source code of linux programs for exchanging between linux and mcu
+mcu   - source code to make S32K144 firmwares
 
 scripts
 -------
@@ -26,6 +26,14 @@ linux
 -----
 ttydebug - very simple control terminal for mcu via linux tty (over UART)
 uploader - program for uploading fw srec files to mcu via linux tty (over UART)
+
+mcu
+---
+bootload - source code for making bootloader
+drv      - source code of c90tfs flash driver 
+fw       - source code for loading srec-format firmware into P-Flash
+sys      - source code for clocks control
+tty      - source code to make tty interface with RPC over UART
 
 docs
 ----
