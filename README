@@ -4,7 +4,7 @@ Useful code to work with MCU s32k144
 dirs
 ----
 docs  - various documents to explain what is happening and what need doing :-)
-evb   - examples of srec files for testing
+evb   - examples of srec files for testing the kit on S32K144EVB
 linux - source code of linux programs for exchanging between linux and mcu
 mcu   - source code to make S32K144 firmwares
 
