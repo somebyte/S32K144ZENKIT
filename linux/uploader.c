@@ -1,17 +1,15 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
-#include "ttyspeed.h"
+#include <limits.h>
+#include "ttyconfig.h"
 const char *usage = "\n\tuploader <tty port device> <baudrate> <srec>\n";
 
 #define MAX_SREC 81
 #define ERR_OK  0x41
 #define ERR_CRC 0x45
-
-#define MAX_STR 255
 
 enum
 {
@@ -37,66 +35,17 @@ int main (int argc, char **argv)
       exit (1);
     }
 
-  ttyfp = fopen (argv[ARG_TTY], "r+");
-    
-  if (ttyfp == NULL)
-    {
-      perror ("open tty");
-      exit (2);
-    }
-
-  if (tcgetattr (fileno (ttyfp),  &ts) < 0)
-    {
-      perror ("get tty attr");
-      exit (3);
-    }
-
   brate = baudrate (argv[ARG_SPEED]);
 
-  if (cfsetspeed (&ts, brate))
-    {
-      perror ("set tty speed");
-      exit (4);
-    }
-
-  ts.c_lflag &= ~(ECHO|ICANON|IEXTEN|ISIG);
-  ts.c_iflag &= ~(BRKINT|ICRNL|INPCK|ISTRIP|IXON);
-  ts.c_cflag &=
-  ts.c_cflag |= CS8;
-  ts.c_cflag &= ~(PARENB|CSIZE|CSTOPB);
-  ts.c_oflag &= ~(OPOST);
-  ts.c_cc[VTIME] = 3;
-  ts.c_cc[VMIN]  = 0;
-
-  if ((fd = fileno (ttyfp)) < 0)
-    {
-      perror ("get fileno");
-      exit (5); 
-    } 
-
-  if (tcsetattr (fileno (ttyfp), TCSAFLUSH, &ts) < 0)
-    {
-      perror ("set tty attr");
-      exit (6);
-    }
-
-  if ((ts.c_lflag & (ECHO|ICANON|IEXTEN|ISIG))        &&
-      (ts.c_iflag & (BRKINT|ICRNL|INPCK|ISTRIP|IXON)) &&
-     ((ts.c_cflag & (CS8|PARENB|CSIZE|CSTOPB)) !=CS8) &&
-      (ts.c_oflag & OPOST)
-     )
-    {
-      errno = EINVAL;
-      perror ("check set tty attr");
-      exit (7);
-    }
+  ttyfp = open_tty (argv[ARG_TTY], brate);
+  if (ttyfp == NULL)
+    exit(1);
 
   srecfp = fopen (argv[ARG_SREC], "r");
-
   if (srecfp == NULL)
     {
       perror(argv[ARG_SREC]);
-      exit(8);
+      exit(2);
     }
 
   fflush (ttyfp);
@@ -135,9 +84,9 @@ int main (int argc, char **argv)
         }
       else
         {
-          char buf[MAX_STR];
+          char buf[_POSIX_MAX_CANON];
           ungetc (ch, ttyfp);
-          if (fgets(buf, MAX_STR, ttyfp) != NULL)
+          if (fgets(buf, _POSIX_MAX_CANON, ttyfp) != NULL)
             fputs (buf, stdout);
           continue;
         }
