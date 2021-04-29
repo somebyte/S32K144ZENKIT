@@ -17,7 +17,7 @@
 
 typedef void(*app_t)(void);
 
-uint32_t APP_BEGIN_ADDRESS = 0x0000; /* m_interrupts */
+uint32_t APP_BEGIN_ADDRESS = 0x00000000; /* m_interrupts */
 
 enum
 {
@@ -43,7 +43,7 @@ const flash_user_config_t Flash_InitConfig0 =
 {
         /* for the S32K144 */
         .PFlashBase  = 0x00000000U,
-        .PFlashSize  = 0x00100000U,
+        .PFlashSize  = 0x00080000U,
         .DFlashBase  = 0x10000000U,
         .EERAMBase   = 0x14000000U,
         .CallBack    = NULL_CALLBACK
@@ -117,10 +117,11 @@ download_fw ()
 void
 jump_to_fw ()
 {
-  /* Check if Entry address is erased and return if erased */
-  if (APP_BEGIN_ADDRESS < 0x1000)
+  /* The volume of memory for bootloader is 32KB */
+  if (APP_BEGIN_ADDRESS < 0x00008000 || APP_BEGIN_ADDRESS >= Flash_InitConfig0.PFlashSize)
       return;
 
+  /* Check if Entry address is erased and return if erased */
   if ((*(uint32_t*)APP_BEGIN_ADDRESS) == 0xFFFFFFFF)
       return;
 
