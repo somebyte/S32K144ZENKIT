@@ -3,10 +3,10 @@
 
 all: ttydebug uploader
 
-ttydebug: ttyspeed.o ttydebug.o
+ttydebug: ttyconfig.o ttydebug.o
 	gcc -o $@ $^
 
-uploader: ttyspeed.o uploader.o
+uploader: ttyconfig.o uploader.o
 	gcc -o $@ $^
 
 clean:
