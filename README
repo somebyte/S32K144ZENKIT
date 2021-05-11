@@ -1,6 +1,6 @@
 # S32K144ZENKIT
 Useful code to work with MCU s32k144
-First of all for making a bootloader
+First of all for making a bootloader via linux tty (UART)
 
 dirs
 ----
