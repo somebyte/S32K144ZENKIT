@@ -41,7 +41,7 @@
 
 void uart_init  (uint32_t settings); /* settings = UART_IFC|UART_PIN_RX|UART_PIN_TX|UART_BAUD */
 void uart_putc  (char  ch);
-void uart_puts  (char* buf, uint32_t maxsize);
+void uart_puts  (const char* buf, uint32_t maxsize);
 char uart_getc  (void);
 int  uart_gets  (char* buf, uint32_t maxsize);
 void uart_reset (void);

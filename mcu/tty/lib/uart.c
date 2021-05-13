@@ -188,7 +188,7 @@ uart_putc (char ch)
 }
 
 void
-uart_puts (char *outputbuf, uint32_t n)
+uart_puts (const char *outputbuf, uint32_t n)
 {
     if (!outputbuf)
       return;
