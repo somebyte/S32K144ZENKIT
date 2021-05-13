@@ -1,6 +1,6 @@
 # S32K144ZENKIT
 Useful code to work with MCU s32k144
-First of all for making a bootloader
+First of all for making a bootloader via linux tty (UART)
 
 dirs
 ----
@@ -38,6 +38,6 @@ tty      - source code to make tty interface with RPC over UART
 
 docs
 ----
-How_to_test_S32K144ZENKIT.pdf
+How_to_test_S32K144ZENKIT_bootloader.pdf
 How_to_get_firmware_for_loading.txt
 
