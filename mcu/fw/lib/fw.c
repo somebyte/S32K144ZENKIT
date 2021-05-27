@@ -17,7 +17,8 @@
 
 typedef void(*app_t)(void);
 
-uint32_t APP_BEGIN_ADDRESS = 0x00000000; /* m_interrupts */
+uint32_t APP_BEGIN_ADDRESS = 0x00009000; /* m_interrupts */
+uint32_t offset = 0;
 
 enum
 {
@@ -30,7 +31,7 @@ enum
 flash_user_config_t flashUserConfig;
 
 /* Declare a FLASH config struct which initialized by FlashInit, and will be used by all flash operations */
-flash_ssd_config_t flashSSDConfig;
+flash_ssd_config_t  flashSSDConfig;
 
 /* Variable used to flag is the memory has been initialized */
 uint8_t is_mem_init = 0;
@@ -50,11 +51,8 @@ const flash_user_config_t Flash_InitConfig0 =
 };
 
 /* Parse src phrase into boot phrase & verify */
-uint8_t
-compile_bootphrase (const char _srecstr[], bootphrase_ptr_t resultbp);
-
-void
-mem_write (const bootphrase_ptr_t const);
+int compile_bootphrase (const char _srecstr[], bootphrase_ptr_t resultbp);
+int mem_write          (const bootphrase_ptr_t const);
 
 /* Download firmware */
 void
@@ -70,14 +68,14 @@ download_fw ()
     {
       if (uart_gets (srecord, MAX_SREC) == 0)
         {
-  	      uart_putc (EOT);
+  	  uart_putc (NUL);
           continue;
-	    }
+	}
 
-      error = compile_bootphrase (srecord, &bp);
-      if (error != ERR_OK)
+      if (compile_bootphrase (srecord, &bp) != 0)
         {
-          uart_putc (error);
+	  uart_puts ("compile boot phrase error", MAX_CANON);
+          uart_putc (CAN);
           return;
         }
 
@@ -86,30 +84,41 @@ download_fw ()
         case '1':
         case '2':
         case '3':
-          mem_write (&bp);
-          ++phrase_count;
-          uart_putc (ERR_OK);
-          break;
-        case '5':
-        case '6':
           {
-            uint32_t count = (uint32_t) bp.phrase.address;
+            if (mem_write (&bp) != 0)
+              {
+        	uart_putc (CAN);
+                is_eof = 1;
+                continue;
+              }
+            ++phrase_count;
+          }
+        break;
+        case '5':
+          {
+            uint32_t count = *(uint32_t*)&(bp.phrase.address[0]);
             if (count != phrase_count)
-            {
-              uart_putc (ERR_CRC);
-              return;
-            }
-          } break;
+              {
+        	uart_puts ("download firmware: checksum error", MAX_CANON);
+                uart_putc (CAN);
+                is_eof = 1;
+                continue;
+              }
+          }
+        case '6':
+        break;
         case '7':
         case '8':
         case '9':
           {
             // APP_START_ADDRESS = (uint32_t) bp.phrase.address;
             is_eof = 1; 
-            uart_putc (ERR_OK);
-          } break;
-        default: break;
+          }
+        break;
+        default:
+        break;
         }
+      uart_putc (ACK);
     }
   while (!is_eof);
 }
@@ -119,37 +128,50 @@ jump_to_fw ()
 {
   /* The volume of memory for bootloader is 32KB */
   if (APP_BEGIN_ADDRESS < 0x00008000 || APP_BEGIN_ADDRESS >= Flash_InitConfig0.PFlashSize)
+    {
       return;
+    }
 
   /* Check if Entry address is erased and return if erased */
   if ((*(uint32_t*)APP_BEGIN_ADDRESS) == 0xFFFFFFFF)
+    {
       return;
+    }
 
+  /* Relocate vector table */
+  S32_SCB->VTOR = (uint32_t) APP_BEGIN_ADDRESS;
   /* Set up stack pointer */
-  S32_SCB->VTOR = APP_BEGIN_ADDRESS;
   __asm__ __volatile__("msr msp,%0"::"r"(*(uint32_t*)APP_BEGIN_ADDRESS):"memory");
   __asm__ __volatile__("msr psp,%0"::"r"(*(uint32_t*)APP_BEGIN_ADDRESS):"memory");
 
   ((app_t)*(uint32_t*)(APP_BEGIN_ADDRESS + 4))();
 }
 
-uint8_t
+int
 compile_bootphrase (const char srecord[], bootphrase_ptr_t bp)
 {
   if (!bp)
-    return ERR_CRC;
+    {
+      return -1;
+    }
 
   if (srecord[PHRASE_START] != 'S')
-    return ERR_CRC;
+    {
+      return -1;
+    }
 
   if (strlen (srecord) <= MIN_SREC)
-    return ERR_CRC;
+    {
+      return -1;
+    }
 
   bp->phrase.type = srecord[PHRASE_TYPE];
   sscanf(&srecord[PHRASE_SIZE], "%2X", &(bp->phrase.size));
 
   if (strlen (srecord) < (2*bp->phrase.size + 4)) /* every byte is 2 symbols */
-    return ERR_CRC;                               /* +4 is SXXX              */
+    {                                             /* +4 is SXXX              */
+      return -1;
+    }
 
   uint32_t checksum = bp->phrase.size;
   uint8_t  crc      = 0;
@@ -179,6 +201,7 @@ compile_bootphrase (const char srecord[], bootphrase_ptr_t bp)
   bp->phrase.data_size = bp->phrase.size - bp->phrase.address_size - 1; /* -n ADDRESS; -1 CRC */
 
   /* Get data */
+  memset(bp->phrase.data, 0, MAX_DATA_BP);
   for (i = 0; i < bp->phrase.data_size; ++i)
     {   
       sscanf (&srecord[PHRASE_SIZE + 2*(1+bp->phrase.address_size) + 2*i], "%2X", &(bp->phrase.data[i]));
@@ -191,12 +214,15 @@ compile_bootphrase (const char srecord[], bootphrase_ptr_t bp)
   crc = (uint8_t) 0xFF & ~checksum;
 
   if (crc != bp->phrase.checksum)
-    return ERR_CRC;
+    {
+      return -1;
+    }
 
-  return ERR_OK;
+  return 0;
 }
 
-void mem_write (const bootphrase_ptr_t const bp)
+int
+mem_write (const bootphrase_ptr_t const bp)
 {
   uint32_t flash_prog_address;
 
@@ -206,7 +232,7 @@ void mem_write (const bootphrase_ptr_t const bp)
       is_mem_init = 1;
     }
 
-  flash_prog_address = (*(uint32_t*)bp->phrase.address);
+  flash_prog_address = *(uint32_t*)&(bp->phrase.address[0]);
 
   /* Check overlap with bootloader */
   if (flash_prog_address >= APP_BEGIN_ADDRESS)
@@ -215,7 +241,21 @@ void mem_write (const bootphrase_ptr_t const bp)
       if ((flash_prog_address % FEATURE_FLS_PF_BLOCK_SECTOR_SIZE) == 0)
         {
           /* Erase sector */
-          FlashEraseSector (&flashSSDConfig, flash_prog_address, FEATURE_FLS_DF_BLOCK_SECTOR_SIZE, FlashCommandSequence);
+	  switch (FlashEraseSector (&flashSSDConfig, flash_prog_address, FEATURE_FLS_PF_BLOCK_SECTOR_SIZE, FlashCommandSequence))
+	    {
+	    case FTFx_OK:          uart_puts ("1) Erase sector: Operation was successful",                MAX_CANON);
+	      break;
+	    case FTFx_ERR_ACCERR:  uart_puts ("1) Erase sector: Operation failed due to an access error", MAX_CANON);
+	      return -1;
+	    case FTFx_ERR_PVIOL:   uart_puts ("1) Erase sector: Operation failed due to a protection violation", MAX_CANON);
+	      return -1;
+	    case FTFx_ERR_MGSTAT0: uart_puts ("1) Erase sector: Operation failed due to an error was detected during execution of an FTFx command", MAX_CANON);
+	      return -1;
+	    case FTFx_ERR_SIZE:    uart_puts ("1) Erase sector: Operation failed due to misaligned size", MAX_CANON);
+	      return -1;
+	    default:               uart_puts ("1) Erase sector: Unknown error", MAX_CANON);
+	      return -1;
+	    }
 
           /* Store the address of the erased sector */
           flash_last_erased_sec = flash_prog_address;
@@ -231,14 +271,40 @@ void mem_write (const bootphrase_ptr_t const bp)
           tmp_add = flash_prog_address - tmp_add;
 
           /* Erase sector */
-          FlashEraseSector(&flashSSDConfig, tmp_add, FEATURE_FLS_DF_BLOCK_SECTOR_SIZE, FlashCommandSequence);
+          switch (FlashEraseSector (&flashSSDConfig, flash_prog_address, FEATURE_FLS_PF_BLOCK_SECTOR_SIZE, FlashCommandSequence))
+            {
+	    case FTFx_OK:          uart_puts ("2) Erase sector: Operation was successful",                MAX_CANON);
+	      break;
+	    case FTFx_ERR_ACCERR:  uart_puts ("2) Erase sector: Operation failed due to an access error", MAX_CANON);
+	      return -1;
+	    case FTFx_ERR_PVIOL:   uart_puts ("2) Erase sector: Operation failed due to a protection violation", MAX_CANON);
+	      return -1;
+	    case FTFx_ERR_MGSTAT0: uart_puts ("2) Erase sector: Operation failed due to an error was detected during execution of an FTFx command", MAX_CANON);
+	      return -1;
+	    case FTFx_ERR_SIZE:    uart_puts ("2) Erase sector: Operation failed due to misaligned size", MAX_CANON);
+	      return -1;
+	    default:               uart_puts ("2) Erase sector: Unknown error", MAX_CANON);
+	      return -1;
+            }
 
           /* Store the address of the erased sector */
           flash_last_erased_sec = tmp_add;
         }
 
       /* Program phrase */
-      FlashProgram (&flashSSDConfig, flash_prog_address, bp->phrase.data_size,  bp->phrase.data, FlashCommandSequence);
+      switch (FlashProgram (&flashSSDConfig, flash_prog_address, bp->phrase.data_size,  bp->phrase.data, FlashCommandSequence))
+        {
+	case FTFx_OK:          uart_puts ("Flash program: Operation was successful\r\n", MAX_CANON); break;
+	case FTFx_ERR_ACCERR:  uart_puts ("Flash program: Operation failed due to an access error\r\n", MAX_CANON);
+	  return -1;
+	case FTFx_ERR_SIZE:    uart_puts ("Flash program: Operation failed due to misaligned size\r\n", MAX_CANON);
+	  return -1;
+	default:               uart_puts ("Flash program: Unknown error", MAX_CANON);
+	  return -1;
+        }
+
+      return 0;
     }
+  return -1;
 }
 

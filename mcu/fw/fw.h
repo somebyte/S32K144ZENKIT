@@ -9,9 +9,6 @@
 
 #include <stdint.h>
 
-#define ERR_OK  0x41
-#define ERR_CRC 0x45
-
 extern uint32_t APP_BEGIN_ADDRESS;
 
 void download_fw ();
