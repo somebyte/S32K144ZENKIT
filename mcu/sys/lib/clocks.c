@@ -7,6 +7,7 @@
 
 #include <S32K144.h>
 #include "../clocks.h"
+#include "../nvic.h"
 
 void
 disable_WDOG (void)
@@ -14,6 +15,7 @@ disable_WDOG (void)
   WDOG->CNT   = 0xD928C520; /* Unlock watchdog       */
   WDOG->TOVAL = 0x0000FFFF; /* Maximum timeout value */
   WDOG->CS    = 0x00002100; /* Disable watchdog      */
+  NVIC_IRQn_disable(WDOG_EWM_IRQn);
 }
 
 void
@@ -120,7 +122,7 @@ init_SPLL (void) // 160 MHz
 }
 
 void
-enter_mode_NRUN (void) // 80MHz /* Change to normal RUN mode with 8MHz FIRC, 80MHz PLL */
+enter_mode_NRUN_80MHz (void) // 80MHz /* Change to normal RUN mode with 8MHz FIRC, 80MHz PLL */
 {
   SCG->RCCR = SCG_RCCR_DIVSLOW(2)| // [3-0]   DIVSLOW =2, div. by 3: FLASH_CLK = CORE_CLK or SYS_CLK / 3 = 26MHz
               SCG_RCCR_DIVBUS(1) | // [7-4]   DIVBUS  =1, div. by 2: BUS_CLK   = CORE_CLK or SYS_CLK / 2 = 40MHz
@@ -131,6 +133,18 @@ enter_mode_NRUN (void) // 80MHz /* Change to normal RUN mode with 8MHz FIRC, 80M
     {
       init_SPLL();
     }
+  // ClockStatusRegister_SystemClockSource
+  while (((SCG->CSR & SCG_CSR_SCS_MASK) >> SCG_CSR_SCS_SHIFT ) != 6) {} // Wait for sys clk src = SPLL
+}
+
+void
+enter_mode_NRUN_48MHz (void) // 48MHz /* Change to normal RUN mode with 8MHz FIRC, 80MHz PLL */
+{
+  SCG->FIRCDIV &= ~(SCG_FIRCDIV_FIRCDIV1(0b111)|SCG_FIRCDIV_FIRCDIV2(0b111));
+  SCG->RCCR = SCG_RCCR_DIVSLOW(1)| // [3-0]   DIVSLOW =1, div. by 2: FLASH_CLK = CORE_CLK or SYS_CLK / 2 = 26MHz
+              SCG_RCCR_DIVBUS(0) | // [7-4]   DIVBUS  =0, div. by 1: BUS_CLK   = CORE_CLK or SYS_CLK / 1 = 40MHz
+              SCG_RCCR_DIVCORE(0)| // [19-16] DIVCORE =0, div. by 1: CORE_CLK or SYS_CLK = SPLL/1 = 80MHz
+              SCG_RCCR_SCS(3);     // [27-24] SCS     = 0b0011: System Clock Source is Fast IRC (FIRC_CLK)
   // ClockStatusRegister_SystemClockSource
   while (((SCG->CSR & SCG_CSR_SCS_MASK) >> SCG_CSR_SCS_SHIFT ) != 6) {} // Wait for sys clk src = SPLL
 }
@@ -189,28 +203,19 @@ init_CLKs (void)
   init_SIRC();
   init_FIRC();
   init_SPLL();
-  enter_mode_NRUN(); // Init clocks: 80 MHz sysclk & core,
-                     //              40 MHz bus,
-                     //              20 MHz flash
+  enter_mode_NRUN_80MHz(); // Init clocks: 80 MHz sysclk & core,
+                           //              40 MHz bus,
+                           //              20 MHz flash
 }
 
 void
 disable_CLKs (void)
 {
+  enter_mode_NRUN_48MHz();
   disable_SPLL();
-  disable_FIRC();
   disable_SIRC();
   disable_SOSC();
   disable_LPO();
 }
 
-void
-disable_CLKs_dbg (void)
-{
-  disable_SPLL();
-//  disable_FIRC(); FIRC have to work during debug
-  disable_SIRC();
-  disable_SOSC();
-  disable_LPO();
-}
 
