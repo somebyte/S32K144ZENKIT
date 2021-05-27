@@ -60,34 +60,38 @@ int main (int argc, char **argv)
           perror("fputs");
           fclose(fp);
           fp = NULL;
-          if (errno == ESPIPE) /* it is may be, for example press RESET */
+          if (errno == ESPIPE) /* it is may be, for example press RESET or jump to address*/
               fp = open_tty (argv[ARG_TTY], brate);
           if (!fp)
             exit(2);
+          continue;
         }
 
-      while(1)
+      int fend = 0;
+      while (!fend)
         {
           ch = fgetc (fp);
-          if (ch == (char) EOF)
+          switch (ch)
             {
-              printf("EOF\n");
-              break;
-            }
-          if (ch == (char) 0)
-            {
-              printf("EMPTY\n");
-              break;
-            }
-          if (ch == (char) 0x04)
-            {
-              printf("^D\n");
-              break;
+            case EOF:
+              printf ("EOF\n");
+              fend = 1;
+              continue;
+            case NUL:
+              printf ("NULL\n");
+              fend = 1;
+              continue;
+            case EOT:
+              printf ("EOT\n");
+              fend = 1;
+              continue;
             }
           ungetc (ch, fp);
           inputs[0] = 0;
           if (fgets (inputs, _POSIX_MAX_CANON, fp) == NULL)
-            break;
+            {
+              break;
+            }
           fputs (inputs, stderr);
         }
 

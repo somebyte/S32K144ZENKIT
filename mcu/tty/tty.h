@@ -17,6 +17,12 @@
                        /* before reading them.                            */
 #define MAX_NUMBF  25
 
-#define EOT 0x04 /* End of Transmit */
+#define NUL 0x00 /* NULL                      */
+#define EOT 0x04 /* END OF TRANSMIT           */
+#define ACK 0x06 /* ACKNOWLEDGMENT            */
+#define ETB 0x17 /* END OF TRANSMISSION BLOCK */
+#define CR  0x0D /* CARRIAGE RETURN           */
+#define CAN 0x18 /* CANCEL                    */
+#define ESC 0x1B /* ESCAPE                    */
 
 #endif /* TTY_TTY_H_ */

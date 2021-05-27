@@ -41,6 +41,8 @@ int main (int argc, char **argv)
   if (ttyfp == NULL)
     exit(1);
 
+  setbuf (ttyfp, NULL);
+
   srecfp = fopen (argv[ARG_SREC], "r");
   if (srecfp == NULL)
     {
@@ -54,52 +56,58 @@ int main (int argc, char **argv)
       perror("fputs");
       exit(9);
     }
- 
-  do
+
+  int fstop = 0;
+  while (feof(srecfp) == 0)
     {
       ch = fgetc (ttyfp);
-      if (ch == (char) EOF)
+      switch (ch)
         {
+        case EOF:
           printf("EOF\n");
+          fstop = 1;
           break;
-        }
-      if (ch == (char) 0)
-        {
-          printf("EMPTY\n");
-          break;
-        }
-      if (ch == (char) 0x41)
-        {
-          printf("OK\n");
+        case NUL:
+          printf("NULL\n");
           continue;
-        }
-      if (ch == (char) 0x45)
-        {
-          printf("CRC ERROR\n");
+        case ACK:
+          printf("ACK\n");
           break;
-        }
-      if (ch == (char) 0x04)
-        {
-          printf("^D CONTINUE\n");
-        }
-      else
-        {
-          char buf[_POSIX_MAX_CANON];
+        case CAN: 
+          printf("CANCEL\n");
+          fstop = 1;
+          break;
+        case EOT:
+          printf("EOT\n");
+          fstop = 1;
+          break;
+        default:
           ungetc (ch, ttyfp);
+          char buf[_POSIX_MAX_CANON];
           if (fgets(buf, _POSIX_MAX_CANON, ttyfp) != NULL)
-            fputs (buf, stdout);
-          continue;
+            {
+              fputs (buf, stdout);
+              continue;
+            }
+          break;
         }
+
+      if (fstop)
+        {
+          break;
+        }
+
       clearerr(ttyfp);
-      fflush (ttyfp);
+      fflush  (ttyfp);
+
       char srecbuf[MAX_SREC] = {0};
       fgets (srecbuf, MAX_SREC, srecfp);
-      printf ("%s", srecbuf);
-      if (strlen(srecbuf) > 0)
-        fputs (srecbuf, ttyfp);
-      srecbuf[0] = 0;
+      if (strlen (srecbuf) > 0)
+        {
+          printf ("SREC: %s", srecbuf);
+          fputs (srecbuf, ttyfp);
+        }
     }
-  while (feof(srecfp) == 0);
 
   fclose (ttyfp);
   fclose (srecfp);
