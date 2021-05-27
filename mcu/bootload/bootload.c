@@ -13,41 +13,51 @@
 #include "../tty/rpc.h"
 #include "../fw/fw.h"
 
-int need_jump_to_fw = 0;
+bootload_t _btlstate = BOOTL_RESETED;
 
 int _extra_proctree();
 int _extra_help();
+int _upload (const void*);
+int _jump   (const void*);
 
-int
-bootloadmain (uint32_t uartcfg)
+bootload_t bootloadinit (uint32_t uartcfg)
 {
+  if ((_btlstate != BOOTL_JUMP) &&
+      (_btlstate != BOOTL_RESETED))
+    return _btlstate;
+
   extra_proctree = _extra_proctree;
   extra_help     = _extra_help;
-
-  char buffer[MAX_CANON] = {0};
 
   init_CLKs ();
   uart_init (uartcfg);
   proctree_init();
 
-  while (1)
-    {
-      if (need_jump_to_fw)
-      	{
-	  proctree_reset();
-      	  uart_reset   ();
-#ifdef APPDEBUG                  /* If you debug application through */
-      	  disable_CLKs_dbg ();   /* openSDA,  FIRC have to work      */
-#else
-      	  disable_CLKs();
-#endif
-          jump_to_fw   ();
-          init_CLKs ();
-          uart_init (uartcfg);
-          proctree_init();
-          need_jump_to_fw = 0;
-      	}
+  _btlstate = BOOTL_INITED;
+  return _btlstate;
+}
 
+bootload_t bootloadreset()
+{
+  extra_proctree = NULL;
+  extra_help     = NULL;
+
+  proctree_reset();
+  uart_reset   ();
+  disable_CLKs();
+
+  _btlstate = BOOTL_RESETED;
+  return _btlstate;
+}
+
+bootload_t
+bootloadmain ()
+{
+  char buffer[MAX_CANON] = {0};
+
+  while ((_btlstate != BOOTL_JUMP) &&
+         (_btlstate != BOOTL_RESETED))
+    {
       if (uart_gets (buffer, MAX_CANON))
         {
           callproc (buffer);
@@ -56,6 +66,8 @@ bootloadmain (uint32_t uartcfg)
 
       uart_putc (EOT);
     }
+
+  return _btlstate;
 }
 
 int
@@ -63,8 +75,8 @@ _extra_proctree ()
 {
   if (!proctree_ptr)
     return -1;
-  insert_command (proctree_ptr, "upload", upload);
-  insert_command (proctree_ptr, "jump",   jump);
+  insert_command (proctree_ptr, "upload", _upload);
+  insert_command (proctree_ptr, "jump",   _jump);
   return 0;
 }
 
@@ -80,21 +92,21 @@ _extra_help ()
 }
 
 int
-upload (const void* ptr)
+_upload (const void* ptr)
 {
-  uart_puts   ("READY", MAX_CANON);
-  uart_putc   (EOT);
+  //uart_puts   ("READY", MAX_CANON);
+  uart_putc   (ACK);
   download_fw ();
   return 0;
 }
 
 int
-jump (const void* ptr)
+_jump (const void* ptr)
 {
-  need_jump_to_fw = 1;
   if (ptr)
-      sscanf( (const char*)ptr, "%X", &APP_BEGIN_ADDRESS);
-
+      sscanf( (const char*)ptr, "%lX", &APP_BEGIN_ADDRESS);
+  uart_putc(EOT);
+  _btlstate = BOOTL_JUMP;
   return 0;
 }
 

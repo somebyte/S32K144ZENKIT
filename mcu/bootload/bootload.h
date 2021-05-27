@@ -10,14 +10,29 @@
 
 #include "../tty/uart.h"
 
-#define APPDEBUG /* If you debug application through openSDA,  */
-#undef  APPDEBUG /* FIRC have to work. Comment this for debug. */
+typedef enum
+{
+  BOOTL_RESETED = 0,
+  BOOTL_INITED  = 1,
+  BOOTL_JUMP    = 2
+} bootload_t;
 
-extern int need_jump_to_fw;
+bootload_t bootloadinit  (uint32_t uartcfg);
+bootload_t bootloadmain  ();
+bootload_t bootloadreset ();
 
-int bootloadmain (uint32_t uartcfg);
-
-int upload (const void*);
-int jump   (const void*);
+#define BOOTLOAD(UARTCFG) {\
+    STARTBOOL:\
+      while(1)\
+        {\
+          bootloadinit (UARTCFG);\
+          if (bootloadmain  () == BOOTL_JUMP)\
+    	    {\
+    	      bootloadreset ();\
+    	      break;\
+    	    }\
+        }\
+      jump_to_fw ();\
+    goto STARTBOOL; }
 
 #endif /* BOOTLOAD_BOOTLOAD_H_ */
