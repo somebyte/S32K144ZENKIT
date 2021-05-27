@@ -5,7 +5,10 @@
 #include <stdio.h>
 
 LPUART_Type* LPUART_PTR   = NULL;
+PORT_Type*   PORT_PTR     = NULL;
 uint32_t     LPUART_INDEX = 0;
+uint32_t     rx = 0;
+uint32_t     tx = 0;
 
 void
 uart_init (uint32_t settings)
@@ -27,7 +30,6 @@ uart_init (uint32_t settings)
     break;
     }
 
-  PORT_Type* PORT_PTR = NULL;
   uint32_t pin = 0;
   uint32_t alt = 0;
 
@@ -85,6 +87,7 @@ uart_init (uint32_t settings)
     }
 
   PORT_PTR->PCR[pin] |= PORT_PCR_MUX(alt); /* RX PIN MUX */
+  rx = pin;
 
   PORT_PTR = NULL;
   pin = 0;
@@ -148,6 +151,7 @@ uart_init (uint32_t settings)
     }
 
   PORT_PTR->PCR[pin] |= PORT_PCR_MUX(alt); /* TX PIN MUX */
+  tx = pin;
     
   PCC->PCCn[LPUART_INDEX] &= ~PCC_PCCn_CGC_MASK;   /* CLK disable */
   PCC->PCCn[LPUART_INDEX] |=  PCC_PCCn_PCS(0b110)| /* Clock Src= 6 (SPLLDIV2_CLK)   */
@@ -265,6 +269,11 @@ uart_gets (char *inputbuf, uint32_t n)
                 ++count;
               }
             else
+            if ((ch == 0x04) || (ch == 0xFF))
+              {
+        	ch = '\n';
+              }
+            else
             if (ch != '\r' && ch != '\n' && ch != '\0')
               {
                 inputbuf[count] = '?';
@@ -290,12 +299,20 @@ uart_gets (char *inputbuf, uint32_t n)
 
 void uart_reset (void)
 {
-  /* Set to after reset state an disable UART Tx/Rx */
-  LPUART_PTR->CTRL = 0x00000000;
-  LPUART_PTR->BAUD = 0x00000000;
+  if (PORT_PTR)
+    {
+      PORT_PTR->PCR[rx] &= ~PORT_PCR_MUX(0b111);
+      PORT_PTR->PCR[tx] &= ~PORT_PCR_MUX(0b111);
+    }
 
-  /* Disable clock to UART */
-  PCC->PCCn[LPUART_INDEX] &= ~PCC_PCCn_CGC_MASK;
+  if (LPUART_PTR)
+    {
+      /* Set to after reset state an disable UART Tx/Rx */
+      LPUART_PTR->CTRL = 0x00000000;
+      LPUART_PTR->BAUD = 0x00000000;
+      /* Disable clock to UART */
+      PCC->PCCn[LPUART_INDEX] &= ~PCC_PCCn_CGC_MASK;
+    }
 }
 
 
