@@ -1,0 +1,12 @@
+Sometimes,
+if you made own firware as srec-file and uploaded it,
+you can see in your debugger something like that:
+	No source available for "<signal handler called>() at 0xfffffff9"
+           OR
+        WDOG-HANDLED-INTERRUPT
+
+Probably of all your srec is wrong, but you can fit it like this:
+	sudo apt-get install srecord
+	srec_cat yourwrong.srec -obs=16 -o yourfix.srec
+
+Now, upload yourfix.srec
