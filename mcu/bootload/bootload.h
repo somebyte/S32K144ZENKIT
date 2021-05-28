@@ -9,6 +9,7 @@
 #define BOOTLOAD_BOOTLOAD_H_
 
 #include "../tty/uart.h"
+#include "../fw/fw.h"
 
 typedef enum
 {

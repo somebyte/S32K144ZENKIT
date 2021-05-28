@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export LN="/bin/ln -s"
+export LN="/bin/ln -s -T "
 
 # base pkg
 $LN ../../S32K144ZENKIT/mcu/sys sys
