@@ -19,9 +19,11 @@ It needs for working with codes from IDE projects.
 
 evb
 ---
+evbterminal_0x0000B000.srec        - firmware for testing the kit with S32K144EVB over tty (uart);
 hello_clocks_blue__0x0000B000.srec - firmware blinks blue  light of S32K144EVB; 0x0000B000 - fw begin address into P-Flash
 hello_clocks_red___0x0000F000.srec - firmware blinks red   light of S32K144EVB; 0x0000F000 - fw begin address into P-Flash
 hello_clocks_green_0x00013000.srec - firmware blinks green light of S32K144EVB; 0x00013000 - fw begin address into P-Flash
+
 
 linux
 -----
@@ -30,6 +32,7 @@ uploader - program for uploading fw srec files to mcu via linux tty (over UART)
 
 mcu
 ---
+adc      - source code for ADC
 bootload - source code for making bootloader
 drv      - source code of c90tfs flash driver 
 fw       - source code for loading srec-format firmware into P-Flash
