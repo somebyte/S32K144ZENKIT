@@ -8,6 +8,8 @@
 #ifndef GPIO_PWCTRL_H_
 #define GPIO_PWCTRL_H_
 
+#include "gpio.h"
+
 typedef enum
 {
   IGNITION_KEY_LINE   = 0,
@@ -20,17 +22,6 @@ typedef enum
   RESERV_LINE_2       = 7,
   LINES_NUMBER        = 8
 } powercontrol_t;
-
-typedef enum
-{
-  nPTZ  = -1,
-  nPTA  = 0,
-  nPTB  = 1,
-  nPTC  = 2,
-  nPTD  = 3,
-  nPTE  = 4,
-  nSIZE = 5
-} portnum_t;
 
 struct IO
 {

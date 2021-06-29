@@ -8,6 +8,23 @@
 #ifndef GPIO_GPIO_H_
 #define GPIO_GPIO_H_
 
+#include <S32K144.h>
+
+typedef enum
+{
+  nPTZ  = -1,
+  nPTA  = 0,
+  nPTB  = 1,
+  nPTC  = 2,
+  nPTD  = 3,
+  nPTE  = 4,
+  nSIZE = 5
+} portnum_t;
+
+PORT_Type* port_type_of      (portnum_t port);
+GPIO_Type* gpio_type_of      (portnum_t port);
+uint32_t   pcc_port_index_of (portnum_t port);
+
 #define  ENABLE_CLOCK_FOR_PORT(PORTNAME) PCC->PCCn[PCC_PORT##PORTNAME##_INDEX]  =  PCC_PCCn_CGC_MASK;
 #define DISABLE_CLOCK_FOR_PORT(PORTNAME) PCC->PCCn[PCC_PORT##PORTNAME##_INDEX] &= ~PCC_PCCn_CGC_MASK;
 

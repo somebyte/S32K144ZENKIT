@@ -16,9 +16,6 @@ int fhello = 0;
 
 uint32_t nGPIOs[nSIZE] = {0,0,0,0,0};
 
-PORT_Type* port_type_of(portnum_t);
-GPIO_Type* gpio_type_of(portnum_t);
-
 IO_t power_pins[LINES_NUMBER] = {
   { .port = nPTZ, .pin = -1, .off = -1 },
   { .port = nPTZ, .pin = -1, .off = -1 },
@@ -34,7 +31,7 @@ PORT_Type* IGNITION_KEY_PORT = NULL;
 GPIO_Type* IGNITION_KEY_GPIO = NULL;
 int        IGNITION_KEY_PIN  = -1;
 
-static const    uint32_t n_key_max = 10;
+static const    uint32_t n_key_max = 20;
 static volatile uint32_t n_key_on  = 0;
 static volatile uint32_t n_key_off = 0;
 
@@ -67,6 +64,7 @@ init_power_pins (void)
 	default: break;
 	}
     }
+
   IGNITION_KEY_PORT = port_type_of(power_pins[IGNITION_KEY_LINE].port);
   IGNITION_KEY_GPIO = gpio_type_of(power_pins[IGNITION_KEY_LINE].port);
   IGNITION_KEY_PIN  = power_pins[IGNITION_KEY_LINE].pin;
@@ -85,9 +83,9 @@ ignition_key_handle (ignkeyevent_t event)
       switch(i)
         {
         case IGNITION_KEY_LINE:
-        continue;
+          continue;
         default:
-        break;
+          break;
         }
 
       if ((event == IGNKEY_OFF) && (i == MPU_POWER_LINE)) // MPU not can be OFF
@@ -109,13 +107,13 @@ ignition_key_handle (ignkeyevent_t event)
             {
             case IGNKEY_ON:
               {
-	            if (power_pins[i].off)
+                if (power_pins[i].off)
                   pcor = 1;
               }
             break;
             case IGNKEY_OFF:
               {
-	            if (!power_pins[i].off)
+                if (!power_pins[i].off)
                   pcor = 1;
               }
             break;
@@ -125,7 +123,7 @@ ignition_key_handle (ignkeyevent_t event)
           if (pcor)
             ptr->PCOR |= (uint32_t)(1<<power_pins[i].pin);
           else
-	        ptr->PSOR |= (uint32_t)(1<<power_pins[i].pin);
+            ptr->PSOR |= (uint32_t)(1<<power_pins[i].pin);
         }
     }
 }
@@ -216,33 +214,4 @@ __sleep(void)
   asm("WFI");
 }
 
-PORT_Type*
-port_type_of (portnum_t port)
-{
-  switch(port)
-    {
-    case nPTA: return PORTA;
-    case nPTB: return PORTB;
-    case nPTC: return PORTC;
-    case nPTD: return PORTD;
-    case nPTE: return PORTE;
-    default: return NULL;
-    }
-  return NULL;
-}
-
-GPIO_Type*
-gpio_type_of (portnum_t port)
-{
-  switch(port)
-    {
-    case nPTA: return PTA;
-    case nPTB: return PTB;
-    case nPTC: return PTC;
-    case nPTD: return PTD;
-    case nPTE: return PTE;
-    default: return NULL;
-    }
-  return NULL;
-}
 
