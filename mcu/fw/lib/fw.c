@@ -67,7 +67,7 @@ download_fw ()
     {
       if (uart_gets (srecord, MAX_SREC) == 0)
         {
-  	  uart_putc (ETB);
+  	  uart_putc (NUL);
           continue;
 	}
 
@@ -305,6 +305,7 @@ mem_write (const bootphrase_ptr_t const bp)
 
       return 0;
     }
+  uart_puts ("3) Flash address error: app begin address must be > 0x9000", MAX_CANON);
   return -1;
 }
 

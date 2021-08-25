@@ -52,7 +52,7 @@ open_tty (const char* filepath, speed_t brate)
   tcflag_t lflag = ECHO|ICANON|IEXTEN|ISIG;        /* local mode flags   */
   tcflag_t iflag = BRKINT|ICRNL|INPCK|ISTRIP|IXON; /* input mode flags   */
   tcflag_t cflag = PARENB|CSTOPB;                  /* control mode flags */
-  tcflag_t oflag = OPOST;                          /* ouput mode flags   */
+  tcflag_t oflag = OCRNL|OFDEL|ONLCR;              /* ouput mode flags   */
 
   ts.c_lflag &= ~lflag;
   ts.c_iflag &= ~iflag;
