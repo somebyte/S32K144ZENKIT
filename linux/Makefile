@@ -1,13 +1,13 @@
 %.o: %.c
-	gcc -c $<
+	${CC} -c $< 
 
 all: ttydebug uploader
 
 ttydebug: ttyconfig.o ttydebug.o
-	gcc -o $@ $^
+	${CC} -o $@ $^
 
 uploader: ttyconfig.o uploader.o
-	gcc -o $@ $^
+	${CC} -o $@ $^
 
 clean:
 	rm -f *.o

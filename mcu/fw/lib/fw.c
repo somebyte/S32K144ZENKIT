@@ -59,7 +59,6 @@ void
 download_fw ()
 {
   bootphrase_t bp;
-  uint8_t    error  = 0;
   uint8_t    is_eof = 0;
   uint32_t   phrase_count = 0;
   char       srecord[MAX_SREC];
@@ -68,7 +67,7 @@ download_fw ()
     {
       if (uart_gets (srecord, MAX_SREC) == 0)
         {
-  	  uart_putc (NUL);
+  	  uart_putc (ETB);
           continue;
 	}
 
@@ -294,7 +293,8 @@ mem_write (const bootphrase_ptr_t const bp)
       /* Program phrase */
       switch (FlashProgram (&flashSSDConfig, flash_prog_address, bp->phrase.data_size,  bp->phrase.data, FlashCommandSequence))
         {
-	case FTFx_OK:          uart_puts ("Flash program: Operation was successful\r\n", MAX_CANON); break;
+	case FTFx_OK:          uart_puts ("Flash program: Operation was successful\r\n", MAX_CANON);
+	  break;
 	case FTFx_ERR_ACCERR:  uart_puts ("Flash program: Operation failed due to an access error\r\n", MAX_CANON);
 	  return -1;
 	case FTFx_ERR_SIZE:    uart_puts ("Flash program: Operation failed due to misaligned size\r\n", MAX_CANON);

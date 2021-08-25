@@ -49,13 +49,17 @@ open_tty (const char* filepath, speed_t brate)
       return NULL;
     }
 
-  ts.c_lflag &= ~(ECHO|ICANON|IEXTEN|ISIG);
-  ts.c_iflag &= ~(BRKINT|ICRNL|INPCK|ISTRIP|IXON);
-  ts.c_cflag &=
+  tcflag_t lflag = ECHO|ICANON|IEXTEN|ISIG;        /* local mode flags   */
+  tcflag_t iflag = BRKINT|ICRNL|INPCK|ISTRIP|IXON; /* input mode flags   */
+  tcflag_t cflag = PARENB|CSTOPB;                  /* control mode flags */
+  tcflag_t oflag = OPOST;                          /* ouput mode flags   */
+
+  ts.c_lflag &= ~lflag;
+  ts.c_iflag &= ~iflag;
   ts.c_cflag |= CS8;
-  ts.c_cflag &= ~(PARENB|CSIZE|CSTOPB);
-  ts.c_oflag &= ~(OPOST);
-  ts.c_cc[VTIME] = 1;
+  ts.c_cflag &= ~cflag;
+  ts.c_oflag &= ~oflag;
+  ts.c_cc[VTIME] = 5;
   ts.c_cc[VMIN]  = 0;
 
   if ((fd = fileno (fp)) < 0)
@@ -65,21 +69,28 @@ open_tty (const char* filepath, speed_t brate)
       return NULL;
     } 
 
-  if (tcsetattr (fileno (fp), TCSAFLUSH, &ts) < 0)
+  if (tcsetattr (fd, TCSAFLUSH, &ts) < 0)
     {
       perror ("set tty attr");
       fclose (fp);
       return NULL;
     }
 
-  if ((ts.c_lflag & (ECHO|ICANON|IEXTEN|ISIG))        &&
-      (ts.c_iflag & (BRKINT|ICRNL|INPCK|ISTRIP|IXON)) &&
-     ((ts.c_cflag & (CS8|PARENB|CSIZE|CSTOPB)) !=CS8) &&
-      (ts.c_oflag & OPOST)
+  if (tcgetattr (fd, &ts) < 0)
+    {
+      perror ("get tty attr");
+      fclose (fp);
+      return NULL;
+    }
+
+  if ((ts.c_lflag & lflag) ||
+      (ts.c_iflag & iflag) ||
+     ((ts.c_cflag & (CS8|cflag)) != CS8) ||
+      (ts.c_oflag & oflag)
      )
     {
       errno = EINVAL;
-      perror ("check set tty attr");
+      perror ("check setted tty attr");
       fclose (fp);
       return NULL;
     }

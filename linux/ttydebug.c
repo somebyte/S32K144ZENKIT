@@ -73,7 +73,7 @@ int main (int argc, char **argv)
           ch = fgetc (fp);
           switch (ch)
             {
-            case EOF:
+            case (char) EOF:
               printf ("EOF\n");
               fend = 1;
               continue;
@@ -81,6 +81,16 @@ int main (int argc, char **argv)
               printf ("NULL\n");
               fend = 1;
               continue;
+            case ETB:
+              printf("ETB\n");
+              continue;
+            case ACK:
+              printf("ACK\n");
+              break;
+            case CAN: 
+              printf("CANCEL\n");
+              fend = 1;
+              break;
             case EOT:
               printf ("EOT\n");
               fend = 1;

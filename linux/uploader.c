@@ -63,12 +63,15 @@ int main (int argc, char **argv)
       ch = fgetc (ttyfp);
       switch (ch)
         {
-        case EOF:
+        case (char) EOF:
           printf("EOF\n");
           fstop = 1;
           break;
         case NUL:
           printf("NULL\n");
+          continue;
+        case ETB:
+          printf("ETB\n");
           continue;
         case ACK:
           printf("ACK\n");
