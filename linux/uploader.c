@@ -58,6 +58,8 @@ int main (int argc, char **argv)
     }
 
   int fstop = 0;
+  int err   = 0;
+  char buf[_POSIX_MAX_CANON];
   while (feof(srecfp) == 0)
     {
       ch = fgetc (ttyfp);
@@ -65,6 +67,7 @@ int main (int argc, char **argv)
         {
         case (char) EOF:
           printf("EOF\n");
+          err = 2;
           fstop = 1;
           break;
         case NUL:
@@ -78,6 +81,7 @@ int main (int argc, char **argv)
           break;
         case CAN: 
           printf("CANCEL\n");
+          err   = 1;
           fstop = 1;
           break;
         case EOT:
@@ -86,7 +90,7 @@ int main (int argc, char **argv)
           break;
         default:
           ungetc (ch, ttyfp);
-          char buf[_POSIX_MAX_CANON];
+          buf[0] = '\0';
           if (fgets(buf, _POSIX_MAX_CANON, ttyfp) != NULL)
             {
               fputs (buf, stdout);
@@ -114,5 +118,10 @@ int main (int argc, char **argv)
 
   fclose (ttyfp);
   fclose (srecfp);
-  return 0;
+  if (err)
+    {
+       fputs (buf, stderr);
+       return err;
+    }
+  return err;
 }
