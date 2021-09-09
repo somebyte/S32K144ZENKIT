@@ -66,26 +66,26 @@ int main (int argc, char **argv)
       switch (ch)
         {
         case (char) EOF:
-          printf("EOF\n");
+          fprintf (stderr, "EOF\n");
           err = 2;
           fstop = 1;
           break;
         case NUL:
-          printf("NULL\n");
+          fprintf (stdout, "NULL\n");
           continue;
         case ETB:
-          printf("ETB\n");
+          fprintf (stdout, "ETB\n");
           continue;
         case ACK:
-          printf("ACK\n");
+          fprintf (stdout, "ACK\n");
           break;
         case CAN: 
-          printf("CANCEL\n");
+          fprintf (stderr, "CANCEL\n");
           err   = 1;
           fstop = 1;
           break;
         case EOT:
-          printf("EOT\n");
+          fprintf (stdout, "EOT\n");
           fstop = 1;
           break;
         default:

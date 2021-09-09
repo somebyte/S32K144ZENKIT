@@ -46,3 +46,8 @@ How_to_test_S32K144ZENKIT_bootloader.odt
 How_to_get_firmware_for_loading.txt
 troubleshooting_of_srec.txt
 
+scripts
+-------
+if you need simple managing for firmwares, you can find scripts here:
+https://github.com/somebyte/miniprj/tree/master/somebyte/scripts/ctrl.fw.s32k144
+
